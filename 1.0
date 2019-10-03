@@ -1,0 +1,92 @@
+Sub importar_dados()
+
+Application.ScreenUpdating = False
+
+Dim wsDestino       As Worksheet
+Dim wsOrigem        As Workbook
+Dim wsArquivo       As Variant
+Dim wsLoop          As Integer
+Dim wsNomeArquivo   As String
+Dim wsLinhaFinal    As Long
+Dim wsBaseDados     As Worksheet
+Dim wsLinha         As Long
+'Declaração do texto inputbox
+Dim myRange As Range
+
+'Loop dos arquivos
+
+wsArquivo = Application.GetOpenFilename("Arquivo do Excel (*.xlsx), *.xl*", _
+            Title:="Escolha o arquivo a ser importado", _
+            MultiSelect:=True)
+            
+If Not IsArray(wsArquivo) Then
+    If wsArquivo = "" Or wsArquivo = False Then
+      MsgBox "Processo abortado, nenhum arquivo foi escolhido", vbOKOnly, "Processo abortado"
+      Exit Sub
+    End If
+End If
+ 
+ Set myRange = Application.InputBox(Prompt:= _
+ "Please Select a Range", _
+ Title:="InputBox Method", Type:=8)
+ 
+ If myRange Is Nothing Then
+ ' Range is blank
+ Else
+ myRange.Select
+ End If
+
+    Set wsDestino = Sheets(1)
+    Set wsBaseDados = Sheets("AR_Jan")
+
+'Loop para importação dos arquivos
+
+For wsLoop = LBound(wsArquivo) To UBound(wsArquivo)
+
+  wsLinha = 3
+  wsNomeArquivo = wsArquivo(wsLoop)
+      
+  Application.Workbooks.Open (wsNomeArquivo)
+  Set wsOrigem = ActiveWorkbook
+     With wsOrigem
+          wsUltimaLinha = ActiveSheet.Cells(Rows.Count, "B").End(xlUp).Row + 1
+
+        While wsBaseDados.Range("A" & wsLinha).Value <> Empty
+            wsLinhaFinal = wsDestino.Cells(Rows.Count, "B").End(xlUp).Row + 2
+            ActiveSheet.Range("$B$2:$D$" & wsUltimaLinha).AutoFilter Field:=1, Criteria1:=wsBaseDados.Range("A" & wsLinha)
+                    
+                    ActiveSheet.Range("$B$2:$D$" & wsUltimaLinha).AutoFilter Field:=1, Criteria1:=wsBaseDados.Range("A" & wsLinha)
+                    ActiveSheet.Range("$B$2:$AG$2").Select
+                    ActiveSheet.Range(Selection, Selection.End(xlDown)).Select
+                    Selection.SpecialCells(xlCellTypeVisible).Select
+                    Selection.Copy
+                    
+                    wsDestino.Range("B" & wsLinhaFinal).PasteSpecial xlPasteValues
+            
+                    wsLinha = wsLinha + 1
+                    
+                    wsOrigem.ActiveSheet.Range("$B$2:$D$" & wsUltimaLinha).AutoFilter Field:=1
+            
+        Wend
+
+  End With
+  
+  Application.DisplayAlerts = False
+  
+    ActiveWorkbook.Close savechanges:=False
+   
+  Application.DisplayAlerts = True
+
+  
+Next wsLoop
+
+wsBaseDados.Range("B1").Select
+
+MsgBox "Importação concluída"
+
+Application.ScreenUpdating = True
+
+
+End Sub
+
+
